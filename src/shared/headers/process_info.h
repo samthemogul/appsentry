@@ -5,7 +5,18 @@
 #include <ctime>
 using namespace std;
 
-typedef enum ProcessState { R, S, X} ps;
+
+
+typedef enum ProcessState
+{
+    RUNNING,
+    SLEEPING,
+    TERMINATED
+} ps;
+
+string get_state_char(ProcessState state);
+
+
 
 // Information about an application process
 struct Processinfo
@@ -13,7 +24,7 @@ struct Processinfo
     // GENERIC
     int pid;      // Process ID
     string name;  // Process name
-    ps state;   // Process state (e.g., 'R' for running, 'S' for sleeping, 'X' for stopped.)
+    ps state;     // Process state (e.g., 'RUNNING' ,'SLEEPING', 'TERMINATED'.)
     int ppid;     // Parent process ID
     int threads;  // Number of threads in use by the process
     string owner; // The current user of the process

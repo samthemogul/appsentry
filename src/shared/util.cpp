@@ -1,12 +1,4 @@
-#ifndef UTIL_H
-#define UTIL_H
-
-#include <string>
-#include <cctype>
-
-using namespace std;
-
-
+#include "headers/util.h"
 
 void toLowercase(string &s)
 {
@@ -20,6 +12,3 @@ void toLowercase(string &s)
         s[i] = (char)tolower(s[i]);
     }
 }
-
-
-#endif
