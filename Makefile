@@ -30,3 +30,4 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 # Clean compiled files
 clean:
 	rm -rf $(OBJDIR) $(TARGET)
+	rm -rf reports

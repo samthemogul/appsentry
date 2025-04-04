@@ -7,6 +7,7 @@ string get_state_char(ProcessState state) {
         case RUNNING: return "RUNNING";
         case SLEEPING: return "SLEEPING";
         case TERMINATED: return "TERMINATED";
+        case IDLE: return "IDLE";
         default: return "UNKNOWN";  // Handle unknown state
     }
 }

@@ -11,7 +11,8 @@ typedef enum ProcessState
 {
     RUNNING,
     SLEEPING,
-    TERMINATED
+    TERMINATED,
+    IDLE
 } ps;
 
 string get_state_char(ProcessState state);

@@ -23,16 +23,11 @@ cd appsentry
 
 ### Build
 ```bash
-mkdir build && cd build
-cmake ..
 make
 ```
 For Windows:
 ```powershell
-mkdir build
-cd build
-cmake .. -G "MinGW Makefiles"
-mingw32-make
+make
 ```
 
 ## Usage

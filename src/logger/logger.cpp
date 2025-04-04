@@ -2,10 +2,10 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <sys/stat.h>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -52,9 +52,14 @@ void saveReport(string app_name, Processinfo &details)
             if (fs::is_directory(entry))
             {
                 string folder = entry.path().filename().string();
-                if (folder == app_name || app_name.find(folder) != string::npos || folder.find(app_name) != string::npos)
+                string modified_folder = folder;
+                replace(modified_folder.begin(), modified_folder.end(), '/', '-');
+
+                if (folder == app_name ||
+                    app_name.find(modified_folder) != std::string::npos ||
+                    modified_folder.find(app_name) != std::string::npos)
                 {
-                    app_folder = folder;
+                    app_folder = modified_folder; // Store original folder value
                     break;
                 }
             }
@@ -72,7 +77,8 @@ void saveReport(string app_name, Processinfo &details)
         {
             if (mkdir(folder_path.c_str(), 0777) != 0)
             {
-                throw runtime_error("Error creating the directory.");
+                string em = "Error creating the directory" + folder_path;
+                throw runtime_error(em);
             };
         }
         else if (!(dir_stat.st_mode & S_IWUSR))
