@@ -12,16 +12,21 @@ int main()
     string os;
     stringstream ss(getOSName());
     getline(ss, os, ':');
-    string ostype = "linux";
+
+    if (os != "linux" && os != "windows" && os != "macos")
+    {
+        cerr << "Your Operating system architecture is not supported at this time." << endl;
+        return 1;
+    }
 
     // Save processess Statistics
     createReportsRepository();
     auto processes = (os == "linux") ? getLinuxProcesses() : (os == "windows") ? getWindowsProcesses()
                                                                                : getIosProcesses();
 
-    for (auto &entry : processes)
+    for (auto &process : processes)
     {
-        saveReport(entry.name, entry);
+        saveReport(process.name, process);
     }
 
     return 0;
