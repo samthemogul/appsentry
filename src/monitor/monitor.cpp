@@ -163,17 +163,17 @@ vector<Processinfo> getLinuxProcesses()
             }
 
             string stat_line;
-            auto statusMap = getStatusFields(status_path);
+            auto status_map = getStatusFields(status_path);
             getline(stat_file, stat_line);
             auto statMap = getStatFields(stat_line);
 
-            name = statusMap["Name"];
-            state = statusMap["State"][1] == 'S' ? SLEEPING : statusMap["State"][1] == 'R' ? RUNNING
-                                                          : statusMap["State"][1] == 'I'   ? IDLE
+            name = status_map["Name"];
+            state = status_map["State"][1] == 'S' ? SLEEPING : status_map["State"][1] == 'R' ? RUNNING
+                                                          : status_map["State"][1] == 'I'   ? IDLE
                                                                                            : TERMINATED;
-            ppid = stoi((statusMap["PPid"]));
-            threads = stoi(statusMap["Threads"]);
-            owner = get_username_from_uid(stoi(statusMap["Uid"]));
+            ppid = stoi((status_map["PPid"]));
+            threads = stoi(status_map["Threads"]);
+            owner = get_username_from_uid(stoi(status_map["Uid"]));
             exec_path = "/proc/pid/exe";
             open_files = 2;
             priority = stoi(statMap["priority"]);
