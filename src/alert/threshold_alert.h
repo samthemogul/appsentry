@@ -56,6 +56,7 @@ struct ThresholdConfig {
     // POSIX Signal configuration
     int posix_alert_signal = SIGUSR1;           // POSIX signal dispatched on alert (0 = none, SIGUSR1 default)
     bool enable_posix_timer = true;             // Drive real-time sampling via POSIX SIGALRM interval timer
+    bool enable_os_notifications = true;        // Dispatch native OS desktop UI notifications (macOS, Linux, Windows)
 
     size_t history_window_size = 20;            // Historical sliding window length
     MitigationPolicy mitigation = MitigationPolicy::MITIGATE_NOTIFY;

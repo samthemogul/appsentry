@@ -1,4 +1,5 @@
 #include "threshold_alert.h"
+#include "os_notifier.h"
 #include "../optimizer/optimizer.h"
 #include "../shared/headers/util.h"
 #include <iostream>
@@ -341,10 +342,17 @@ bool ThresholdAlertManager::applyMitigation(const Processinfo &proc, const strin
             << " to relieve workload pressure. " << purge_msg;
         out_alert.message = oss.str();
         out_alert.mitigation_applied = "Cache Purge & Renice";
-        return true;
     }
 
-    return false;
+    if (config.enable_os_notifications) {
+        string sub = "Process: " + proc.name + " (PID " + to_string(proc.pid) + ")";
+        OSNotifier::sendNotification("AppSentry Mitigation: " + out_alert.title,
+                                     out_alert.message,
+                                     OSNotifier::Urgency::CRITICAL,
+                                     sub);
+    }
+
+    return true;
 }
 
 vector<AlertRecord> ThresholdAlertManager::processSample(const Processinfo &proc) {
@@ -594,6 +602,19 @@ vector<AlertRecord> ThresholdAlertManager::processSample(const Processinfo &proc
                 recorded_alerts.push_back(mitig_alert);
             }
         }
+    }
+
+    // 9. Dispatch Native OS Desktop UI Notifications (macOS / Linux / Windows)
+    if (!generated_alerts.empty() && config.enable_os_notifications) {
+        // Dispatch desktop notification for primary alert
+        const auto &primary_alert = generated_alerts[0];
+        OSNotifier::Urgency urg = (primary_alert.severity == AlertSeverity::SEV_CRITICAL) ?
+                                  OSNotifier::Urgency::CRITICAL : OSNotifier::Urgency::NORMAL;
+        string sub = "Process: " + proc.name + " (PID " + to_string(proc.pid) + ")";
+        OSNotifier::sendNotification("AppSentry: " + primary_alert.title,
+                                     primary_alert.message,
+                                     urg,
+                                     sub);
     }
 
     return generated_alerts;

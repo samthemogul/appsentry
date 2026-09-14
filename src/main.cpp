@@ -53,6 +53,7 @@ static void printUsage(const string &prog_name) {
     cout << "  --thread-growth <n>     Consecutive thread increases indicating leak (default: 4)\n";
     cout << "  --signal-alert <SIG>    POSIX signal dispatched on alert (default: SIGUSR1, e.g. SIGUSR2)\n";
     cout << "  --no-signal             Disable POSIX alert signal dispatching\n";
+    cout << "  --no-ui-notify          Disable native OS desktop UI notifications (macOS / Linux / Windows)\n";
     cout << "  --pause-on-exhaustion   Dispatch POSIX SIGSTOP to pause runaway thread spawning\n";
     cout << "  --auto-kill             Proactively terminate process on exhaustion breach (SIGTERM/SIGKILL)\n";
     cout << "  --auto-optimize         Automatically purge memory caches when threshold breached\n";
@@ -113,6 +114,8 @@ static int handleMonitor(int argc, char *argv[]) {
             else config.posix_alert_signal = stoi(sig_str);
         } else if (arg == "--no-signal") {
             config.posix_alert_signal = 0;
+        } else if (arg == "--no-ui-notify" || arg == "--no-notify") {
+            config.enable_os_notifications = false;
         } else if (arg == "--pause-on-exhaustion") {
             config.mitigation = MitigationPolicy::MITIGATE_PAUSE;
         } else if (arg == "--auto-kill" || arg == "--auto-terminate") {
@@ -168,6 +171,7 @@ static int handleMonitor(int argc, char *argv[]) {
     cout << "   - Leak Sensitivity: >= " << config.consecutive_growth_threshold << " mem increases | >= "
          << config.consecutive_thread_growth_threshold << " thread increases\n";
     cout << "   - POSIX Alert Signal: " << (config.posix_alert_signal > 0 ? ThresholdAlertManager::getPosixSignalName(config.posix_alert_signal) : "DISABLED") << "\n";
+    cout << "   - OS UI Notifications: " << (config.enable_os_notifications ? "ENABLED (Native Desktop Banners)" : "DISABLED") << "\n";
     cout << "   - Prevention Policy: "
          << (config.mitigation == MitigationPolicy::MITIGATE_TERMINATE ? "AUTO-TERMINATE (POSIX SIGTERM/SIGKILL)" :
              config.mitigation == MitigationPolicy::MITIGATE_PAUSE     ? "AUTO-PAUSE (POSIX SIGSTOP freeze)" :
