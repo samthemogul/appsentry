@@ -3,15 +3,16 @@
 ## Overview
 **AppSentry** is a high-performance cross-platform command-line application that monitors desktop applications, tracking their CPU and memory usage, and logs how long they have been running. Users can generate detailed reports of app usage and optimize their system by freeing memory, stopping apps, or launching applications directly from the CLI.
 
-AppSentry includes custom threshold-alerting logic and proactive memory leak detection algorithms to prevent process-level resource exhaustion during long-running tasks.
+AppSentry implements real-time threshold-alerting logic using POSIX signals, enabling automated detection of memory leaks and thread exhaustion under heavy workloads.
 
 ## Features
-- **Monitor Applications**: Track real-time CPU and resident memory (RSS) usage of running applications.
-- **Resource Exhaustion Prevention**: Custom threshold-alerting logic that proactively detects memory leaks and prevents system freeze or out-of-memory (OOM) crashes during long-running tasks.
-- **Proactive Memory Leak Detection**: Sliding-window statistical analysis tracking monotonic expansion, growth velocity (MB/s), and time-to-exhaustion projections.
-- **Automated & Interactive Mitigation**: Automatically terminates runaway leaking processes or purges caches (`--auto-kill`, `--auto-optimize`).
-- **Log Usage Data**: Store app activity logs and diagnostic alert histories locally in a `reports/` folder.
-- **Generate Reports**: View app usage history, performance metrics, and security/alert audits.
+- **Monitor Applications**: Track real-time CPU, resident memory (RSS), and active thread counts of running applications.
+- **POSIX Signal Alerting**: Real-time asynchronous sampling driven by POSIX interval timers (`SIGALRM`/`setitimer`) and inter-process alert dispatching (`SIGUSR1`/`SIGUSR2`).
+- **Automated Memory Leak Detection**: Sliding-window statistical analysis tracking monotonic expansion, growth velocity (MB/s), and time-to-exhaustion projections.
+- **Thread Exhaustion Detection**: Proactively detects unbounded thread spawning, unjoined threads, and thread pool exhaustion under heavy workloads before system PID table exhaustion occurs.
+- **Signal-Based Automated Mitigation**: Automatically pauses runaway processes via POSIX `SIGSTOP` or terminates them via `SIGTERM`/`SIGKILL` (`--pause-on-exhaustion`, `--auto-kill`, `--auto-optimize`).
+- **Log Usage Data**: Store app activity logs, thread statistics, and diagnostic alert histories locally in a `reports/` folder.
+- **Generate Reports**: View app usage history, peak threads, leak diagnostics, and POSIX signal audits.
 - **Optimize System**: Free memory or terminate running applications via graceful `SIGTERM` or force `SIGKILL`.
 - **Launch Apps**: Start applications via the command line across macOS, Linux, and Windows.
 - **Process Inspection**: Inspect active processes and memory consumption with `appsentry list`.
@@ -44,18 +45,24 @@ appsentry <command> [options]
 ```bash
 appsentry monitor <app_name|pid> [options]
 ```
-- Starts tracking the CPU and memory usage of an application.
-- Emits proactive alerts upon detecting continuous monotonic memory expansion (leaks) or threshold breaches.
+- Starts tracking CPU, memory, and thread counts driven by real-time POSIX interval timers (`SIGALRM`).
+- Emits real-time POSIX signals (`SIGUSR1`) upon detecting memory leaks or thread exhaustion under heavy workloads.
+- Proactively halts or terminates runaway processes (`SIGSTOP`/`SIGTERM`) before process-level exhaustion causes system failure.
 - Logs data and diagnostic alert events to `reports/<app_name>.report`.
 
 **Options:**
-- `-i, --interval <sec>`: Sampling interval in seconds (default: `2s`)
+- `-i, --interval <sec>`: Sampling interval in seconds (default: `2s`, POSIX timer driven)
 - `-d, --duration <sec>`: Total monitoring duration in seconds (default: continuous until Ctrl+C)
 - `-m, --threshold-mem <MB>`: Critical memory threshold for resource exhaustion (default: `800 MB`)
 - `-w, --threshold-warn <MB>`: Warning memory threshold (default: `400 MB`)
+- `-t, --threshold-threads <n>`: Critical thread exhaustion limit (default: `150 threads`)
+- `--threshold-threads-warn <n>`: Warning thread threshold under heavy workload (default: `50 threads`)
 - `-c, --threshold-cpu <%>`: CPU warning threshold percentage (default: `80%`)
-- `-l, --leak-growth <n>`: Consecutive interval increases required to flag a memory leak (default: `4`)
-- `--auto-kill`: Proactively terminate the leaking process upon reaching exhaustion threshold to prevent system crash
+- `-l, --leak-growth <n>`: Consecutive interval memory increases required to flag a leak (default: `4`)
+- `--thread-growth <n>`: Consecutive interval thread increases required to flag thread exhaustion (default: `4`)
+- `--signal-alert <SIG>`: POSIX signal dispatched to process on alert (default: `SIGUSR1`, e.g. `SIGUSR2`)
+- `--pause-on-exhaustion`: Dispatch POSIX `SIGSTOP` to freeze runaway thread spawning under load
+- `--auto-kill`: Proactively terminate the leaking process on exhaustion breach (`SIGTERM`/`SIGKILL`)
 - `--auto-optimize`: Automatically trigger system memory cache purge when threshold is reached
 - `--once`: Record a single snapshot to the report and exit
 

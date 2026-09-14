@@ -18,6 +18,15 @@ namespace Optimizer {
     // Lower process CPU scheduling priority (renice)
     bool reducePriority(int pid, int nice_value = 19);
 
+    // Send arbitrary POSIX signal to a process
+    bool sendSignal(int pid, int signum);
+
+    // Pause/Freeze process via POSIX SIGSTOP (halts thread spawning under heavy workload)
+    bool pauseProcess(int pid);
+
+    // Resume process via POSIX SIGCONT
+    bool resumeProcess(int pid);
+
     // Optimize application by freeing memory or stopping processes
     bool optimizeApplication(const std::string &app_name, bool force_kill, std::string &report_msg);
 }

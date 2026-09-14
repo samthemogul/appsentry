@@ -99,6 +99,37 @@ bool reducePriority(int pid, int nice_value) {
 #endif
 }
 
+bool sendSignal(int pid, int signum) {
+    if (pid <= 1) return false;
+#if defined(_WIN32)
+    (void)pid; (void)signum;
+    return false;
+#else
+    return kill(pid, signum) == 0;
+#endif
+}
+
+bool pauseProcess(int pid) {
+    if (pid <= 1) return false;
+#if defined(_WIN32)
+    (void)pid;
+    return false;
+#else
+    return kill(pid, SIGSTOP) == 0;
+#endif
+}
+
+bool resumeProcess(int pid) {
+    if (pid <= 1) return false;
+#if defined(_WIN32)
+    (void)pid;
+    return false;
+#else
+    return kill(pid, SIGCONT) == 0;
+#endif
+}
+
+
 bool optimizeApplication(const string &app_name, bool force_kill, string &report_msg) {
     vector<Processinfo> targets = findProcessesByName(app_name);
     ostringstream oss;

@@ -226,6 +226,14 @@ bool parseReportSummary(const string &app_name, AppReportSummary &summary)
             ss >> rss;
             if (rss > max_rss) max_rss = rss;
         }
+        else if (line.rfind("Threads:", 0) == 0)
+        {
+            string val = line.substr(8);
+            stringstream ss(val);
+            int th = 0;
+            ss >> th;
+            if (th > summary.peak_threads) summary.peak_threads = th;
+        }
         else if (line.rfind("CPU Usage:", 0) == 0)
         {
             string val = line.substr(10);
@@ -250,8 +258,11 @@ bool parseReportSummary(const string &app_name, AppReportSummary &summary)
             if (type == "HIGH_CPU_CONSUMPTION") summary.cpu_alerts++;
             else if (type == "MEMORY_THRESHOLD_WARNING") summary.mem_alerts++;
             else if (type == "SUSPECTED_MEMORY_LEAK" || type == "CONFIRMED_MEMORY_LEAK") summary.leak_alerts++;
-            else if (type == "RESOURCE_EXHAUSTION_CRITICAL") summary.exhaustion_breaches++;
+            else if (type == "THREAD_THRESHOLD_WARNING" || type == "SUSPECTED_THREAD_LEAK" || type == "CONFIRMED_THREAD_LEAK") summary.thread_alerts++;
+            else if (type == "RESOURCE_EXHAUSTION_CRITICAL" || type == "THREAD_EXHAUSTION_CRITICAL") summary.exhaustion_breaches++;
             else if (type == "RESOURCE_EXHAUSTION_PREVENTED") summary.preventions_executed++;
+            else if (type == "THREAD_EXHAUSTION_PREVENTED") summary.thread_exhaustion_prevented++;
+            else if (type == "POSIX_SIGNAL_DISPATCHED") summary.posix_signals_dispatched++;
         }
         else if (line.rfind("Message:", 0) == 0)
         {
@@ -291,17 +302,23 @@ void displayReport(const string &app_name)
     cout << "Application: " << summary.app_name << "\n";
     cout << "Total Runtime: " << formatDuration(summary.total_runtime_sec) << "\n";
     cout << "Peak Memory Usage: " << formatKB(summary.peak_memory_kb) << "\n";
+    if (summary.peak_threads > 0) {
+        cout << "Peak Active Threads: " << summary.peak_threads << " threads\n";
+    }
     cout << "Average CPU Usage: " << fixed << setprecision(1) << summary.avg_cpu_usage << "%\n";
     cout << "First Monitored: " << summary.first_monitored << "\n";
     cout << "Last Active: " << summary.last_active << "\n";
     cout << "--------------------------------------------------------\n";
-    cout << "Resource Exhaustion & Memory Leak Prevention:\n";
+    cout << "Resource Exhaustion & Proactive Alerting Summary:\n";
     cout << "  Total Snapshots Logged: " << summary.samples_count << "\n";
     cout << "  Memory Leaks Detected: " << summary.leak_alerts << "\n";
+    cout << "  Thread Exhaustion Alerts: " << summary.thread_alerts << "\n";
     cout << "  Memory Threshold Warnings: " << summary.mem_alerts << "\n";
     cout << "  High CPU Warnings: " << summary.cpu_alerts << "\n";
     cout << "  Critical Exhaustion Breaches: " << summary.exhaustion_breaches << "\n";
-    cout << "  Resource Exhaustion Events Prevented: " << summary.preventions_executed << "\n";
+    cout << "  Memory Exhaustion Events Prevented: " << summary.preventions_executed << "\n";
+    cout << "  Thread Exhaustion Events Prevented: " << summary.thread_exhaustion_prevented << "\n";
+    cout << "  Real-Time POSIX Signals Dispatched: " << summary.posix_signals_dispatched << "\n";
 
     if (!summary.recent_alerts.empty())
     {
