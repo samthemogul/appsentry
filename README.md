@@ -3,13 +3,14 @@
 ## Overview
 **AppSentry** is a high-performance cross-platform command-line application that monitors desktop applications, tracking their CPU and memory usage, and logs how long they have been running. Users can generate detailed reports of app usage and optimize their system by freeing memory, stopping apps, or launching applications directly from the CLI.
 
-AppSentry implements real-time threshold-alerting logic using POSIX signals, enabling automated detection of memory leaks and thread exhaustion under heavy workloads.
+AppSentry implements real-time threshold-alerting logic using POSIX signals, enabling automated detection of memory leaks and thread exhaustion under heavy workloads. Alerts are piped in real time to the native OS notification system (macOS Notification Center, Linux Desktop Notifications via `libnotify`/`notify-send`, and Windows Toast Notifications).
 
 ## Features
 - **Monitor Applications**: Track real-time CPU, resident memory (RSS), and active thread counts of running applications.
 - **POSIX Signal Alerting**: Real-time asynchronous sampling driven by POSIX interval timers (`SIGALRM`/`setitimer`) and inter-process alert dispatching (`SIGUSR1`/`SIGUSR2`).
 - **Automated Memory Leak Detection**: Sliding-window statistical analysis tracking monotonic expansion, growth velocity (MB/s), and time-to-exhaustion projections.
 - **Thread Exhaustion Detection**: Proactively detects unbounded thread spawning, unjoined threads, and thread pool exhaustion under heavy workloads before system PID table exhaustion occurs.
+- **Cross-Platform Native OS Desktop UI Notifications**: Real-time visual UI banner alerts dispatched directly into macOS Notification Center (`osascript`), Linux desktop (`notify-send`/`libnotify`/KDE `kdialog`), and Windows Toast/Action Center (PowerShell balloon/toast) with severity-mapped notification sounds and urgency levels. Dispatched asynchronously in background subshells to avoid interrupting real-time monitoring loops.
 - **Signal-Based Automated Mitigation**: Automatically pauses runaway processes via POSIX `SIGSTOP` or terminates them via `SIGTERM`/`SIGKILL` (`--pause-on-exhaustion`, `--auto-kill`, `--auto-optimize`).
 - **Log Usage Data**: Store app activity logs, thread statistics, and diagnostic alert histories locally in a `reports/` folder.
 - **Generate Reports**: View app usage history, peak threads, leak diagnostics, and POSIX signal audits.
@@ -47,6 +48,7 @@ appsentry monitor <app_name|pid> [options]
 ```
 - Starts tracking CPU, memory, and thread counts driven by real-time POSIX interval timers (`SIGALRM`).
 - Emits real-time POSIX signals (`SIGUSR1`) upon detecting memory leaks or thread exhaustion under heavy workloads.
+- Dispatches visual UI banner alerts to the native desktop OS notification system (macOS Notification Center, Linux `libnotify`, Windows Toast).
 - Proactively halts or terminates runaway processes (`SIGSTOP`/`SIGTERM`) before process-level exhaustion causes system failure.
 - Logs data and diagnostic alert events to `reports/<app_name>.report`.
 
@@ -64,6 +66,7 @@ appsentry monitor <app_name|pid> [options]
 - `--pause-on-exhaustion`: Dispatch POSIX `SIGSTOP` to freeze runaway thread spawning under load
 - `--auto-kill`: Proactively terminate the leaking process on exhaustion breach (`SIGTERM`/`SIGKILL`)
 - `--auto-optimize`: Automatically trigger system memory cache purge when threshold is reached
+- `--no-ui-notify`: Suppress desktop OS UI notification banners (keep terminal logging and POSIX signals)
 - `--once`: Record a single snapshot to the report and exit
 
 ```bash
@@ -113,9 +116,11 @@ appsentry list [filter]
  │   ├── logger/                  # Handles report writing & summary parsing
  │   │   ├── logger.h
  │   │   ├── logger.cpp
- │   ├── alert/                   # Threshold alerting & memory leak detection
+ │   ├── alert/                   # Threshold alerting, leak detection & OS UI notifier
  │   │   ├── threshold_alert.h
  │   │   ├── threshold_alert.cpp
+ │   │   ├── os_notifier.h
+ │   │   ├── os_notifier.cpp
  │   ├── optimizer/               # Frees memory, stops processes, purges cache
  │   │   ├── optimizer.h
  │   │   ├── optimizer.cpp
