@@ -27,7 +27,7 @@ static void signalHandler(int signum) {
     g_running = false;
 }
 
-static void printUsage(const string &prog_name) {
+static void printUsage(std::string_view prog_name) {
     cout << "\n=========================================================================\n";
     cout << " AppSentry - Application Usage Monitor, Leak Detector & Optimizer\n";
     cout << "=========================================================================\n";
@@ -70,6 +70,10 @@ static void printUsage(const string &prog_name) {
 }
 
 static int handleMonitor(int argc, char *argv[]) {
+    // Currently this is able to just monitor one particular application at a time
+    // In the future, I would support monitoring all the potentially resource intense processes
+    // running at once.
+
     if (argc < 3) {
         cerr << "Error: 'monitor' command requires an application name or PID.\n";
         cerr << "Usage: appsentry monitor <app_name|pid> [options]\n";
